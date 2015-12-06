@@ -2,14 +2,14 @@
 
 class PHPcom #PHPcom object
 {
-  public $Baud;
-  public $DataBits;
-  public $StopBits;
-  public $Port;
+  public $Baud; #Baud rate
+  public $DataBits; #Data bits
+  public $StopBits; #Stop bits
+  public $Port; #Path to device file eg. /dev/ttyUSB1
 
-  public $PortHandle;
+  public $PortHandle; #File descriptor
 
-  public function __construct( $Port, $Baud, $DataBits, $StopBits ) #Class construcot
+  public function __construct( $Port, $Baud, $DataBits, $StopBits ) #Class construcor
   {
     $this->Port = $Port;
     $this->Baud = $Baud;
@@ -19,9 +19,11 @@ class PHPcom #PHPcom object
 
   public function Setup( ) #Setup port device file (takes really long time to execuse, use ONCE)
   {
+    if ( !file_exists( $this->Port ) ) trigger_error( "Device file doesn't exist!", E_USER_ERROR );
+
     $Command = sprintf( "stty -F %s %d cs%d", $this->Port, $this->Baud, $this->DataBits );
     $Command .= " ignbrk -brkint -imaxbel -opost -onlcr -isig -icanon -iexten";
-    $Command .= " -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts";
+    $Command .= " -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts"; #More and more options
 
     if ( $this->StopBits == 1 )
     {
@@ -41,7 +43,7 @@ class PHPcom #PHPcom object
     $this->PortHandle = fopen( $this->Port, "w+" );
     if ( !$this->PortHandle )
     {
-      echo "Error with opening device!";
+      trigger_error( "Error with opening device!", E_USER_ERROR );
       die( );
     }
   }
@@ -67,7 +69,7 @@ class PHPcom #PHPcom object
         break;
 
       default:
-        echo "Invalid argument count for PHPcom->Write( );";
+        trigger_error( "Invalid argument count for PHPcom->Write( );", E_USER_ERROR );
         break;
     }
   }
@@ -93,10 +95,54 @@ class PHPcom #PHPcom object
         break;
 
       default:
-        echo "Invalid argument count for PHPcom->Read( );";
+        trigger_error( "Invalid argument count for PHPcom->Read( );", E_USER_ERROR );
         break;
     }
     return $Data;
+  }
+
+
+  public function ProcessCommandsArray( $Commands ) #Execute array of commands and return responses
+  {
+    #Input data format: {command1, command2, ...}
+    #Alternative input data format {{commands1, flags1, flag2}, {commands2, flags3, flag4}, ...}
+    #Output data format: {{command1, response1}, {command2, response2}, ...}
+
+    #Possible flags:
+      # - noread - Don't read input after sending command (default: false)
+      # - wendchar - Character to end write with (default: 0x00)
+      # - rendchar - Character to end read with (default: 0x00)
+      # - rlength - Maximum amount of characters to read (default: 0)
+
+    for ( $i = 0; $i < count( $Commands ); $i++ )
+    {
+      if ( !is_array( $Commands[$i] ) )
+      {
+        #If command is not contained in array create it (simple input)
+        $Commands[$i] = array( $Commands[$i] );
+        $this->Write( $Commands[$i][0] );
+        $Commands[$i][1] = $this->Read( );
+      }
+      else
+      {
+        #Check for "wend" flag
+        if ( !array_key_exists( "wendchar", $Commands[$i] ) ) $Commands[$i]["wendchar"] = 0x00;
+
+        if ( !array_key_exists( "noread", $Commands[$i] ) ) $Commands[$i]["noread"] = 0;
+        $this->Write( $Commands[$i][0], $Commands[$i]["wendchar"] );
+
+        if ( $Commands[$i]["noread"] == 0 ) #If "noread" flag is enabled don not read input
+        {
+          #Check for "rlength" flag
+          if ( !array_key_exists( "rlength", $Commands[$i] ) ) $Commands[$i]["rlength"] = 0;
+          #Check for "rendchar" flag
+          if ( !array_key_exists( "rendchar", $Commands[$i] ) ) $Commands[$i]["rendchar"] = 0x00;
+
+          $Commands[$i][1] = $this->Read( );
+        }
+      }
+    }
+    return $Commands;
   }
 }
 
