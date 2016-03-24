@@ -1,8 +1,8 @@
 # PHPcom
 
-[![The MIT License](https://img.shields.io/badge/license-MIT-orange.svg?style=flat-square)](http://opensource.org/licenses/MIT)
-[![Build Status](https://scrutinizer-ci.com/g/Jacajack/PHPcom/badges/build.png?b=master,style=flat-square)](https://scrutinizer-ci.com/g/Jacajack/PHPcom/build-status/master)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Jacajack/PHPcom/badges/quality-score.png?b=master,style=flat-square)](https://scrutinizer-ci.com/g/Jacajack/PHPcom/?branch=master)
+[![The MIT License](https://img.shields.io/badge/license-MIT-orange.svg)](http://opensource.org/licenses/MIT)
+[![Build Status](https://scrutinizer-ci.com/g/Jacajack/PHPcom/badges/build.png?b=master)](https://scrutinizer-ci.com/g/Jacajack/PHPcom/build-status/master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Jacajack/PHPcom/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Jacajack/PHPcom/?branch=master)
 
 PHPcom is PHP library for using serial communication for linux. It's very lightweight, pretty fast, object oriented and very simple to use.
 
